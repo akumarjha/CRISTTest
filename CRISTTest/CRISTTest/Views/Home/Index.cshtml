@@ -1,0 +1,135 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-alpha3/dist/css/bootstrap.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+
+@*<section class="container">   
+    <form class="row">
+        <label for="date" class="col-1 col-form-label">Date</label>
+        <div class="col-5">
+            <div class="input-group date" id="datepicker">
+                <input type="text" class="form-control" id="date" />
+                <span class="input-group-append">
+                    <span class="input-group-text bg-light d-block">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                </span>
+            </div>
+        </div>
+    </form>
+</section>*@
+
+
+<div class="container">
+    <div class="row">
+        <label>Start Date</label>
+        @*<div class="col-sm-6" align="center">*@
+            <input type="date" name="date" id="startDate">
+        @*</div>*@
+
+    </div>
+    <div class="row">
+        <label>End Date</label>
+        @*<div class="col-sm-6" align="center">*@
+        <input type="date" name="date" id="endDate">
+        @*</div>*@
+
+    </div>
+</div>
+<div class="text-center">
+@*    <div>
+        <label>Start Date:</label>
+        <input type="datetime" />
+    </div>
+    <div>
+        <label>End Date:</label>
+        <input type="datetime" />
+    </div>*@
+    <style>
+        table, th, td {
+            border: 1px solid black;
+        }
+    </style>
+    @*<input type="button"*@
+    <button class="btn btn-primary" style="margin-top:20px" onclick="GetForecastData()" id="btnDetails">GetForecastData</button>
+    <hr />
+    <div>
+        <table id="forecastTable" style="width:100%">
+            <thead>
+                <th>ID</th>
+                <th>Counterparty</th>
+                <th>BusinessDate</th>
+                <th>Exposure</th>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+    <canvas id="barChart"></canvas>
+    @*  @foreach (ExposureForecast forecast in ViewBag.exposureForecasts)
+    {
+    <b>@forecast.ID</b>
+    }*@
+    @* <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>*@
+</div>
+
+<script>
+    function GetForecastData() {
+        var startDate = $('#startDate').val();
+        var endDate = $('#endDate').val();
+        $.ajax({
+            url: "http://localhost:5137/Home/GetForecastData",
+            method: "GET",
+            data: { startDate: startDate, endDate: endDate },
+            success: function (response) {
+                response = JSON.parse(response);
+                var forecastTable = $("#forecastTable tbody");
+                forecastTable.empty();
+                $(response).each(function (index, forcast) {
+                    forecastTable.append(
+                        '<tr><td>' + forcast.ID + '</td><td>'
+                        + forcast.Counterparty + '</td><td>'
+                        + forcast.Businessdate + '</td><td>'
+                        + forcast.Exposure + '</td></tr>')
+                });
+                var label = [];
+                var datsetLabel = "";
+                var dataSetData = [];
+                let chartStatus = Chart.getChart("barChart");
+                if (chartStatus != undefined) {
+                    chartStatus.destroy();
+                }
+                $(response).each(function (index, forcast) {
+                    label.push(forcast.Businessdate);  
+                    datsetLabel = forcast.Counterparty;
+                    dataSetData.push(forcast.Exposure.replace(/\,/g, ""));
+                });
+                var canvasElement = $("#barChart");
+                var config = {
+                    type:"bar",
+                    data:{
+                        labels:label,
+                        datasets: [{ label: datsetLabel, data: dataSetData }]
+                    }
+                };
+                var cookieChart = new Chart(canvasElement,config);
+                //var body = $.("#tbody");
+                //$.each
+
+                console.log(response);
+            },
+            error: function (error) {
+                console.error(error);
+            }
+        })
+    }
+
+    //$.(function () {
+    //    $.('#datepicker').datepicker();
+    //});
+</script>
